@@ -1,0 +1,18 @@
+# 环境与密钥
+.env
+*.local
+
+# 依赖与构建产物
+node_modules/
+dist/
+*.exe
+*.log
+
+# 运行时
+uploads/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

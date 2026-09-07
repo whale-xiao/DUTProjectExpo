@@ -1,0 +1,28 @@
+/* 设计令牌（对齐 08-前端设计方案 §3，编码期基线） */
+:root {
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --hairline: #e6e9f0;
+  --ink: #1e2433;
+  --sub: #5a6478;
+  --muted: #a7b0c0;
+  --brand: #0d4a8e;
+  --brand-deep: #08345f;
+  --brand-soft: #e4eef7;
+  --accent: #e0700a;
+  --danger: #c0392b;
+  --ok: #1e7d46;
+
+  --serif: "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
+  --sans: system-ui, -apple-system, "PingFang SC", "HarmonyOS Sans", "Microsoft YaHei", sans-serif;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+
+  --shadow-card: 0 1px 2px rgba(30, 36, 51, 0.06);
+  --shadow-hover: 0 6px 16px rgba(30, 36, 51, 0.1);
+
+  --content-max: 1180px;
+  --ease: cubic-bezier(0.2, 0.6, 0.25, 1);
+}
