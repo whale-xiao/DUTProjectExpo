@@ -1,16 +1,28 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+// 首页：影院头图 + 热力榜 + 推荐 + 分类合集行 + 最新（见 docs/12 §4/§6）。
+// 搜索框已并入顶部导航行，见 App.vue。
+import { ref, computed, onMounted } from 'vue'
 import { getHome } from '@/api/home'
-import SearchBox from '@/components/search/SearchBox.vue'
+import { listProjects } from '@/api/projects'
 import ProjectGrid from '@/components/project/ProjectGrid.vue'
+import HeroBanner from '@/components/home/HeroBanner.vue'
+import RankBoard from '@/components/home/RankBoard.vue'
+import CategoryRow from '@/components/home/CategoryRow.vue'
 
-const router = useRouter()
 const home = ref({ recommended: [], categories: [], latest: [] })
 const loading = ref(true)
 const error = ref('')
 
-onMounted(async () => {
+// 全量项目（一次拉取，供热力榜与分类合集行复用；按浏览量降序）
+const allProjects = ref([])
+const allLoading = ref(true)
+
+onMounted(() => {
+  loadHome()
+  loadAll()
+})
+
+async function loadHome() {
   try {
     home.value = await getHome()
   } catch (e) {
@@ -18,24 +30,44 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
 
-function goDetail(id) {
-  router.push(`/project/${id}`)
+async function loadAll() {
+  try {
+    // page_size 上限 100，30 个项目规模一次取全即可，避免每分类各发一次请求
+    const page = await listProjects({ sort: 'views', page: 1, page_size: 100 })
+    allProjects.value = page.list || []
+  } catch {
+    allProjects.value = [] // 次要内容，失败不打断首页
+  } finally {
+    allLoading.value = false
+  }
 }
-function goSearch(kw) {
-  router.push({ path: '/projects', query: { q: kw } })
-}
+
+// 头图轮播：优先用推荐（最多 5 条，避免一次加载过多大图），无推荐时回落到最新
+const featured = computed(() => {
+  const rec = home.value.recommended || []
+  const src = rec.length ? rec : home.value.latest || []
+  return src.slice(0, 5)
+})
+const featuredEyebrow = computed(() => (home.value.recommended?.length ? '本周主推' : '最新作品'))
+
+// 热力榜取前 10（接口已按 views 降序）
+const hotList = computed(() => allProjects.value.slice(0, 10))
+
+// 分类合集行：按分类分组，空分类不渲染
+const rows = computed(() => {
+  const cats = home.value.categories || []
+  return cats
+    .map((c) => ({ category: c, items: allProjects.value.filter((p) => p.categoryId === c.id) }))
+    .filter((r) => r.items.length > 0)
+})
 </script>
 
 <template>
-  <!-- 首页即内容：顶部导航下方直接是搜索 + 内容流，不做巨型 hero -->
-  <section class="hero">
-    <h1 class="slogan">发现实训基地的优秀项目</h1>
-    <div class="hero-search">
-      <SearchBox size="large" @select="(item) => goDetail(item.id)" @submit="goSearch" />
-    </div>
-  </section>
+  <HeroBanner :items="featured" :loading="loading" :eyebrow="featuredEyebrow" />
+
+  <!-- 搜索框已并入顶部导航行（见 App.vue），此处不再单独占一条 -->
 
   <div v-if="error" class="container error">
     <p>{{ error }}</p>
@@ -46,42 +78,44 @@ function goSearch(kw) {
     <ProjectGrid v-if="loading" :cards="[]" :loading="true" />
 
     <template v-else>
+      <div v-if="allLoading || hotList.length" class="section" v-reveal>
+        <RankBoard :items="hotList" :loading="allLoading" />
+      </div>
+
       <div v-if="home.recommended.length" class="section">
-        <div class="section-head">
+        <div class="section-head" v-reveal>
           <h2>推荐项目</h2>
           <router-link to="/projects" class="more">查看全部 →</router-link>
         </div>
-        <ProjectGrid :cards="home.recommended" />
+        <!-- 卡片各自错开浮现，故外层不加 v-reveal，避免父子双重动画 -->
+        <ProjectGrid :cards="home.recommended" :categories="home.categories" />
       </div>
 
+      <CategoryRow
+        v-for="(r, i) in rows"
+        :key="r.category.id"
+        v-reveal="i * 60"
+        class="section"
+        :title="r.category.name"
+        :items="r.items"
+        :category-id="r.category.id"
+      />
+
       <div v-if="home.latest.length" class="section">
-        <div class="section-head">
+        <div class="section-head" v-reveal>
           <h2>最新上架</h2>
         </div>
-        <ProjectGrid :cards="home.latest" />
+        <ProjectGrid :cards="home.latest" :categories="home.categories" />
       </div>
     </template>
   </section>
 </template>
 
 <style scoped>
-.hero {
-  padding: 72px 24px 56px;
-  text-align: center;
-}
-.slogan {
-  margin: 0 0 28px;
-  font-family: var(--serif);
-  font-size: 34px;
-  font-weight: 700;
-  color: var(--ink);
-}
-.hero-search {
-  max-width: 560px;
-  margin: 0 auto;
-}
+/* 搜索框已移入顶部导航行（见 App.vue），首页不再有独立搜索区 */
 .section {
-  margin-bottom: 48px;
+  display: block;
+  margin-bottom: 52px;
 }
 .section-head {
   display: flex;
@@ -106,5 +140,11 @@ function goSearch(kw) {
 .hint {
   color: var(--muted);
   font-size: 13px;
+}
+
+@media (max-width: 639px) {
+  .section {
+    margin-bottom: 36px;
+  }
 }
 </style>

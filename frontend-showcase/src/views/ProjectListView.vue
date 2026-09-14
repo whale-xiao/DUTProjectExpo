@@ -131,6 +131,7 @@ const showFilterNote = computed(() => Boolean(q.value) || categoryId.value > 0)
       v-else
       :cards="cards"
       :loading="loading"
+      :categories="categories"
       empty-text="没有匹配的项目，试试清空筛选"
     />
 

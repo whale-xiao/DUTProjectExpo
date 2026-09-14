@@ -37,3 +37,26 @@ button {
   margin: 0 auto;
   padding: 0 24px;
 }
+
+/* —— 滚动显现（配合 src/directives/reveal.js，见 docs/12 §7）——
+   注意：.reveal 由指令（JS）添加，因此 JS 整体失效时内容依然可见；
+   下面的 media query 是第二道兜底，保证减弱动效偏好下绝不留隐藏态。 */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+.reveal.is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

@@ -36,7 +36,7 @@ defineProps({
   margin: 16px 0 0;
 }
 .block-image {
-  margin: 24px 0 0;
+  margin: 28px 0 0;
 }
 .block-image img {
   max-width: 100%;
@@ -44,12 +44,16 @@ defineProps({
   border-radius: var(--r-md);
   display: block;
   margin: 0 auto;
+  background: var(--bg);
+  /* 极细描边，让浅色剧照在浅色纸面上仍有边界感（见 docs/12 §5.5） */
+  box-shadow: inset 0 0 0 1px rgba(30, 36, 51, 0.06);
 }
+/* 剧照说明左对齐，比居中更接近"剧照"语感，也不与正文缩进打架 */
 .block-image figcaption {
-  text-align: center;
+  text-align: left;
   color: var(--muted);
   font-size: 13px;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 .img-ph {
   border: 1px dashed var(--hairline);
