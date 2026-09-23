@@ -6,6 +6,7 @@ import { suggestProjects } from '@/api/projects'
 const props = defineProps({
   placeholder: { type: String, default: '搜索项目名、技术栈、关键词…' },
   size: { type: String, default: 'large' }, // large | inline
+  variant: { type: String, default: 'default' }, // default | glass（glass 用于首页浮在头图上的导航）
   initial: { type: String, default: '' },
 })
 const emit = defineEmits(['select', 'submit'])
@@ -118,7 +119,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="searchbox" :class="size">
+  <div class="searchbox" :class="[size, variant]">
     <div class="searchbox-bar">
       <svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <circle cx="11" cy="11" r="7"></circle>
@@ -190,6 +191,39 @@ onBeforeUnmount(() => {
 .searchbox.inline .searchbox-bar {
   border-radius: var(--r-md);
 }
+
+/* —— glass 变体：嵌在首页头图上的导航行里 ——
+   半透明毛玻璃，白字；高度压到 40px 以适配导航行。
+   注意：联想下拉仍用不透明的 --surface（见 .searchbox-drop），保证压在图片上也读得清。 */
+.searchbox.glass .searchbox-bar {
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.26);
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+}
+.searchbox.glass .searchbox-bar:focus-within {
+  border-color: rgba(255, 255, 255, 0.62);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.16);
+}
+.searchbox.glass .ico {
+  color: rgba(255, 255, 255, 0.82);
+  width: 16px;
+  height: 16px;
+}
+.searchbox.glass .input {
+  font-size: 14px;
+  color: #fff;
+}
+.searchbox.glass .input::placeholder {
+  color: rgba(255, 255, 255, 0.72);
+}
+.searchbox.glass .clear {
+  background: rgba(255, 255, 255, 0.24);
+  color: #fff;
+}
 .searchbox-bar {
   display: flex;
   align-items: center;
@@ -199,7 +233,7 @@ onBeforeUnmount(() => {
   background: var(--surface);
   border: 1px solid var(--hairline);
   box-shadow: var(--shadow-card);
-  transition: border-color 0.12s var(--ease), box-shadow 0.12s var(--ease);
+  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
 }
 .searchbox-bar:focus-within {
   border-color: var(--brand);

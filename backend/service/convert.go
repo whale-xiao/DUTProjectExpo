@@ -18,6 +18,7 @@ func cardFrom(p model.Project, tags []string) dto.CardDTO {
 		Tags:          tags,
 		IsRecommended: p.IsRecommended,
 		CategoryID:    p.CategoryID,
+		ViewCount:     p.ViewCount,
 		CreatedAt:     p.CreatedAt,
 	}
 }

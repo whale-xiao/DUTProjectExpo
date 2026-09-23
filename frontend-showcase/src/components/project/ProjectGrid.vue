@@ -1,12 +1,26 @@
 <script setup>
+import { computed } from 'vue'
 import ProjectCard from './ProjectCard.vue'
 
-defineProps({
+const props = defineProps({
   cards: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
   emptyText: { type: String, default: '暂无项目' },
   skeletonCount: { type: Number, default: 6 },
+  // 可选：传入分类列表，卡片左上角会显示分类角标（CardDTO 只带 categoryId）
+  categories: { type: Array, default: () => [] },
 })
+
+const catMap = computed(() => {
+  const m = {}
+  for (const c of props.categories) m[c.id] = c.name
+  return m
+})
+
+// 同一批卡片依次错开浮现（编辑节奏的关键）；封顶避免长列表末尾等太久
+function stagger(i) {
+  return Math.min(i, 5) * 70
+}
 </script>
 
 <template>
@@ -19,7 +33,13 @@ defineProps({
   </div>
 
   <div v-else-if="cards.length" class="grid">
-    <ProjectCard v-for="card in cards" :key="card.id" :card="card" />
+    <ProjectCard
+      v-for="(card, i) in cards"
+      :key="card.id"
+      v-reveal="stagger(i)"
+      :card="card"
+      :category-name="catMap[card.categoryId] || ''"
+    />
   </div>
 
   <div v-else class="empty">

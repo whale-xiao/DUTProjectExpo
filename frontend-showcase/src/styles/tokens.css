@@ -25,4 +25,51 @@
 
   --content-max: 1180px;
   --ease: cubic-bezier(0.2, 0.6, 0.25, 1);
+
+  /* —— 影院头图专用令牌（见 docs/12-前台影院化改造方案.md §3）——
+     仅 HeroBanner / DetailHero 使用；上面既有令牌一律未改动，故其他页面零影响。 */
+  --hero-h: clamp(420px, 48vh, 540px); /* 详情页头图：中等高度 */
+  --hero-h-sm: clamp(300px, 40vh, 380px); /* 详情页头图移动端 */
+  --r-xl: 20px;
+
+  /* 常规导航行高。仅用于「非首页」页面 —— 首页的导航浮在头图上，不占行高。 */
+  --nav-h: 56px;
+
+  /* 首页全屏头图：整屏（不减导航高度，因为导航是浮在图片上的）。
+     默认用 vh；支持 dvh 的浏览器再覆盖一次，避免移动端地址栏收放导致的跳动。 */
+  --hero-h-screen: 100vh;
+
+  --veil: rgba(8, 12, 20, 0.58);
+  --veil-strong: rgba(8, 12, 20, 0.78);
+  --cinema-ink: #ffffff;
+  --cinema-sub: rgba(255, 255, 255, 0.8);
+  --cinema-line: rgba(255, 255, 255, 0.22);
+  --cinema-chip: rgba(255, 255, 255, 0.12);
+
+  --shadow-hero: 0 24px 60px rgba(8, 12, 20, 0.28);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* —— 动效时长（统一全站 hover / 显现语言，见 docs/12 §7）——
+     参考 Pell Mell 的「简单但持续」：反馈要有一致的手感，
+     此前各组件分别写 0.12s / 0.18s / 0.2s，观感是拼凑出来的。
+     新代码一律用这几个令牌，不要另写数字。 */
+  --dur-fast: 0.16s; /* 指针悬停等微反馈 */
+  --dur-base: 0.28s; /* 卡片抬升、按钮状态 */
+  --dur-slide: 0.6s; /* 头图轮播换帧 */
+  --dur-slow: 0.7s; /* 滚动显现 */
+
+  /* 遮罩公式：顶 + 下→上 + 左→右 三道渐变叠加。
+     文字压在左下角；顶部那一道是给「浮在图片上的导航」留对比度的
+     （白字直接压图片顶部会看不清），右上仍保留图片原貌。
+     该组合保证白字对比度 ≥ 4.5:1（WCAG AA）。 */
+  --veil-grad: linear-gradient(to bottom, var(--veil) 0%, transparent 20%),
+    linear-gradient(to top, var(--veil-strong) 0%, transparent 55%),
+    linear-gradient(to right, var(--veil) 0%, transparent 62%);
+}
+
+/* dvh 可用时改用动态视口高度（移动端地址栏收放不再引起整屏跳动） */
+@supports (height: 100dvh) {
+  :root {
+    --hero-h-screen: 100dvh;
+  }
 }

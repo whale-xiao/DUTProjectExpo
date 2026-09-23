@@ -22,6 +22,7 @@ type PageData[T any] struct {
 }
 
 // CardDTO 列表/首页卡片（一眼懂项目，字段克制）。
+// ViewCount 供首页「热力榜」展示排名热度使用。
 type CardDTO struct {
 	ID            uint      `json:"id"`
 	Name          string    `json:"name"`
@@ -30,6 +31,7 @@ type CardDTO struct {
 	Tags          []string  `json:"tags"`
 	IsRecommended bool      `json:"isRecommended"`
 	CategoryID    uint      `json:"categoryId"`
+	ViewCount     uint      `json:"viewCount"`
 	CreatedAt     time.Time `json:"createdAt"`
 }
 
