@@ -1,0 +1,103 @@
+# 大连理工大学实训基地优秀项目展示系统 —— 一键部署编排
+#
+#   docker compose up -d --build      # 构建并启动全部服务
+#   docker compose ps                 # 查看状态（mysql 应为 healthy）
+#   docker compose logs -f backend    # 查看后端日志（AutoMigrate / Seed）
+#   docker compose down               # 停止（保留数据卷）
+#   docker compose down -v            # 停止并清空数据（连演示数据一起重置）
+#
+# 访问入口：
+#   前台展示站  http://localhost
+#   管理后台    http://localhost:8081   （默认账号 admin / admin123456）
+#
+# 可覆盖的变量写在同目录 .env（见 .env.example），不写则用下面的默认值。
+
+name: dut-project-expo
+
+services:
+  # ── 数据库：官方镜像 + 命名卷持久化 ─────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: expo-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-expo_root_pwd}
+      MYSQL_DATABASE: ${DB_NAME:-project_showcase}
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --default-time-zone=+08:00
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # 只建库不建表；9 张表由后端启动时的 GORM AutoMigrate 创建。
+      # 注意：该脚本仅在数据卷为空的首次初始化时执行一次。
+      - ./backend/scripts/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      # MySQL 初始化需数十秒，只有 healthy 后端才会启动
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+    networks: [expo]
+
+  # ── 后端：多阶段静态构建 ───────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+    image: dut-expo/backend:latest
+    container_name: expo-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        # 后端连不上 MySQL 不会退出也不会重试，必须等数据库真正就绪
+        condition: service_healthy
+    environment:
+      SERVER_PORT: "8080"
+      DB_HOST: mysql          # compose 内部网络，用服务名当主机名，不暴露 3306
+      DB_PORT: "3306"
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-expo_root_pwd}
+      DB_NAME: ${DB_NAME:-project_showcase}
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me}
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_INIT_PASSWORD: ${ADMIN_INIT_PASSWORD:-admin123456}
+      UPLOAD_DIR: /app/uploads   # 绝对路径，避免依赖进程工作目录
+      STORAGE_DRIVER: local
+      GIN_MODE: release
+      TZ: Asia/Shanghai
+    volumes:
+      # 命名卷首次创建时会用镜像内 /app/uploads 的内容初始化，
+      # 所以 seed 的封面图不会丢，之后用户上传的图片也会持久化。
+      - upload_data:/app/uploads
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    networks: [expo]
+
+  # ── 网关：一个 nginx 托管两个前端 + 反代 API ────────────────────
+  nginx:
+    build:
+      context: .
+      dockerfile: deploy/nginx.Dockerfile
+    image: dut-expo/nginx:latest
+    container_name: expo-nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"       # 前台展示站
+      - "8081:8081"   # 管理后台
+    networks: [expo]
+
+volumes:
+  mysql_data:
+  upload_data:
+
+networks:
+  expo:
+    driver: bridge
