@@ -329,36 +329,38 @@ flowchart LR
 
 ---
 
-## 6. 部署图（二期：Docker + 阿里云）
+## 6. 部署图（Docker 容器化，一期已落地）
 
 ```mermaid
 flowchart TB
-    subgraph 阿里云 ECS
-        subgraph Docker
-            N[Nginx 容器<br/>前台/后台静态资源 + 反代 /api /uploads]
-            B[Go 后端容器<br/>gin 二进制]
-            M[(MySQL 容器<br/>数据卷持久化)]
-            R[(Redis 容器 二期)]
+    subgraph ECS[阿里云 ECS / 本机]
+        subgraph Docker[Docker Compose 编排]
+            N[Nginx 容器<br/>:80 前台 / :8081 后台<br/>静态资源 + 反代 /api、/uploads]
+            B[Go 后端容器<br/>:8080 多阶段构建的静态二进制]
+            M[(MySQL 8.0 容器)]
+            V1[(数据卷 mysql_data)]
+            V2[(数据卷 upload_data<br/>/app/uploads 图片)]
+            R[(Redis 容器 · 二期)]
         end
-        ST[(数据卷:/data/uploads 图片)]
     end
 
     用户浏览器 -->|443/80| N
-    N -->|反向代理 /api| B
-    N -->|静态文件| ST
+    N -->|反代 /api、/uploads| B
     B -->|3306| M
-    B -.->|6379| R
-    B -->|读写图片| ST
+    M --- V1
+    B --- V2
+    B -.->|6379 · 二期| R
 
-    运维 -->|ssh + docker compose up| 阿里云ECS
-    CI/CD(二期 GitHub Actions) --> 阿里云ECS
+    运维 -->|ssh + docker compose up -d| ECS
+    CICD(CI/CD · 二期) --> ECS
 ```
 
 **部署说明**：
-- 前台/后台构建为静态资源，由 Nginx 容器服务并做路由回退（SPA history 模式）。
-- `/api` 反代到 Go 容器；`/uploads` 直接由 Nginx 服务图片文件。
-- MySQL 数据与上传图片挂载数据卷，容器重建不丢数据。
-- 二期补充：HTTPS 证书、Redis 缓存、镜像仓库 + CI/CD。
+- 前台/后台在构建阶段编译为静态资源，由 Nginx 容器服务并做路由回退（SPA history 模式）。两者都使用 history 模式且资源路径固定在根，因此**分端口**（前台 `:80`、后台 `:8081`）而非子路径。
+- `/api` 与 `/uploads` 均由 Nginx 反代到 Go 容器。图片虽是静态文件，仍走反代而非 Nginx 直服：上传目录只由后端一个服务持有，可避免两个服务共挂同一数据卷时的初始化顺序问题。
+- MySQL 数据与上传图片各挂一个命名卷，容器重建不丢数据；上传卷由镜像内的 `uploads/` 初始化，保证种子数据的封面图不缺失。
+- 后端 8080 与 MySQL 3306 均不对外发布，只走 compose 内部网络（`DB_HOST=mysql`）。
+- 一期已实现：`docker-compose.yml` + `backend/Dockerfile` + `deploy/nginx.Dockerfile` + `deploy/nginx.conf`，一条 `docker compose up -d --build` 拉起全栈。二期补充：HTTPS 证书、Redis 缓存、镜像仓库与自动 CI/CD。
 
 ---
 

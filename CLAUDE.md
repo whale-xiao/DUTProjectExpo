@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 「大连理工大学实训基地优秀项目展示系统」——一个浏览、发现、阅读"实训优秀项目作品"的内容网站。30 个项目被当作 **30 件可阅读的作品文章**，而非 30 条数据库记录。参考 Reddit（内容发现）、Pixiv（作品展示）、小红书（卡片浏览），但**不引入社交机制**。
 
-**当前状态（2026-09-14）**：**已进入编码期**。`backend/`（Go 后端，含前台接口 + `/api/admin/*` 后台接口）、`frontend-showcase/`（前台展示站）、`frontend-admin/`（Vue3 + Element Plus 管理后台）均已实现并可运行。运行说明见 `docs/06-环境配置.md`。
+**当前状态（2026-10-08）**：**功能已完工，进入收尾期**。`backend/`（Go 后端，含前台接口 + `/api/admin/*` 后台接口）、`frontend-showcase/`（前台展示站）、`frontend-admin/`（Vue3 + Element Plus 管理后台）均已实现并可运行；**Docker 容器化已落地并实测通过**（`docker-compose.yml` + `deploy/`，三服务一条命令拉起）。运行说明见 `docs/06-环境配置.md`。
 
 这是一个 9 周课程项目（9 周计划表见根目录 `*.xlsx`；`docs/开发流程.md` 是阶段里程碑摘要，标记"勿改"）。评审节点：9/8 需求分析、9/11 原型、9/24 数据库+概要设计、10/16 代码终版、10/30 答辩。
 
@@ -33,7 +33,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 展示前台 | Vue 3 + Vite + Pinia + Vue Router + Axios（`frontend-showcase/`，:5173） |
 | 管理后台 | Vue 3 + Vite + Element Plus + Pinia（`frontend-admin/`，:5174，若依式布局精简版） |
 | 后端 | Go **1.26.x** + Gin + GORM（router → handler → service → repository → model） |
-| 数据 | MySQL 5.7/8.0（utf8mb4，9 张表 AutoMigrate）；二期加 Redis、Docker、阿里云 |
+| 数据 | MySQL 5.7/8.0（utf8mb4，9 张表 AutoMigrate）；二期加 Redis、阿里云 |
+| 部署 | Docker Compose（`docker-compose.yml` + `deploy/`）：mysql + backend + nginx 三服务，`docker compose up -d --build` 一条命令拉起 |
 
 - 后端分层：`router`（含 `/uploads` 静态 + CORS + JWT 中间件）→ `handler`（HTTP/参数校验）→ `service`（业务/事务）→ `repository`（GORM；`admin_project.go` 含整单事务保存）。图片一期存本地 `/uploads`（`UploadService`），二期换 OSS 不动业务代码。
 - 统一响应 `{ "code": 0, "message": "ok", "data": {} }`；错误码集中 `pkg/errcode`；仓储哨兵错误 `repository.ErrDuplicate`/`ErrRefInUse` 由 service 映射。
@@ -74,12 +75,15 @@ demo/
 ## 运行命令（详见 docs/06）
 
 ```bash
-# 后端（:8080；自动建表 + seed admin/演示数据）
-cd backend && go run .
+# 开发期：三终端
+cd backend && go run .                      # 后端 :8080（自动建表 + seed admin/演示数据）
+cd frontend-showcase && npm run dev         # 前台 :5173
+cd frontend-admin    && npm run dev         # 后台 :5174
 
-# 前台（:5173） / 后台（:5174）
-cd frontend-showcase && npm run dev
-cd frontend-admin    && npm run dev
+# 容器期：一条命令拉起全栈（前台 :80 / 后台 :8081，无需本机装 Go/Node/MySQL）
+docker compose up -d --build
+docker compose ps            # mysql 与 backend 应为 healthy
+docker compose down          # 停止（保留数据卷；加 -v 则清空数据重新灌种子）
 ```
 - 后端 `.env`（从 `.env.example` 复制）：`DB_*`、`SERVER_PORT`、`JWT_SECRET`、`ADMIN_USER`、`ADMIN_INIT_PASSWORD`、`UPLOAD_DIR`、`STORAGE_DRIVER`。敏感值不入 Git。
 - 前端**无需** `VITE_API_BASE_URL`：开发期由 Vite 代理 `/api`、`/uploads` → :8080；生产 Nginx 同源反代。

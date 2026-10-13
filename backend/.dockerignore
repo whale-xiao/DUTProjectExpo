@@ -1,0 +1,4 @@
+.env
+*.log
+scripts
+# 注意：uploads/ 不能排除——seed 演示数据的封面图（/uploads/cover/*.jpg）必须随镜像分发
