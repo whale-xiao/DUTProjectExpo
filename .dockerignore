@@ -1,0 +1,16 @@
+# 构建上下文瘦身：只保留源代码，排除依赖、产物与环境文件
+.git
+.gitignore
+.vscode
+.env
+*.log
+
+# 前端依赖与构建产物（win32 原生二进制，绝不能进 Linux 构建上下文）
+**/node_modules
+**/dist
+
+# 文档与零散文件，镜像里用不到
+# 注意：deploy/ 不能排除——nginx 镜像的构建上下文是仓库根目录，
+# 需要从中 COPY deploy/nginx.conf，排掉会导致构建报 "not found"。
+docs
+*.md
