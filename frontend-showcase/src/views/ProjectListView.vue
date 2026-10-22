@@ -52,7 +52,7 @@ async function fetchList(p) {
     const data = await listProjects(params)
     cards.value = p === 1 ? data.list : cards.value.concat(data.list)
     total.value = data.total
-    hasMore.value = data.hasMore
+    hasMore.value = data.has_more
     page.value = p
     error.value = ''
   } catch (e) {
