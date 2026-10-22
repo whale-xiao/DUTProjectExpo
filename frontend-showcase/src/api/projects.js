@@ -4,13 +4,17 @@ import http from './http'
  * 项目列表（全部 / 搜索 / 分类标签筛选 / 排序 / 分页）。
  * @param {{ keyword?: string, categoryId?: number, tagId?: number, sort?: string, page?: number, pageSize?: number }} params
  */
-export function listProjects(params = {}) {
+export function listProjects({ keyword, categoryId, tagId, sort, page, pageSize, page_size } = {}) {
+  // 后端 dto.ListQuery 使用 snake_case（category_id / tag_id / page_size），
+  // 这里统一转换，避免调用方传驼峰导致参数被 Gin 绑定忽略。
   return http.get('/api/projects', {
     params: {
-      page: 1,
-      page_size: 20,
-      sort: 'recommended',
-      ...params,
+      keyword,
+      category_id: categoryId || undefined,
+      tag_id: tagId || undefined,
+      sort: sort || 'recommended',
+      page: page || 1,
+      page_size: pageSize || page_size || 20,
     },
   })
 }

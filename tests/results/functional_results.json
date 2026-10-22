@@ -1,0 +1,467 @@
+{
+ "total": 51,
+ "passed": 47,
+ "failed": 4,
+ "time": "2026-10-20 09:28:02",
+ "results": [
+  {
+   "id": "FT-01",
+   "module": "A 前台展示",
+   "title": "首页聚合接口返回推荐项目与分类",
+   "steps": "GET /api/home",
+   "expected": "code=0 且 recommended 非空",
+   "actual": "code=0 recommended=5",
+   "status": "通过"
+  },
+  {
+   "id": "FT-02",
+   "module": "A 前台展示",
+   "title": "项目列表默认分页返回 8 条",
+   "steps": "GET /api/projects?page=1&page_size=8",
+   "expected": "本页 8 条，total≥8",
+   "actual": "本页=8 total=15",
+   "status": "通过"
+  },
+  {
+   "id": "FT-03",
+   "module": "A 前台展示",
+   "title": "按分类筛选项目",
+   "steps": "GET /api/projects?category_id=1",
+   "expected": "返回项目均属于该分类",
+   "actual": "命中=4 条，分类一致=是",
+   "status": "通过"
+  },
+  {
+   "id": "FT-04",
+   "module": "A 前台展示",
+   "title": "按标签筛选项目",
+   "steps": "GET /api/projects?tag_id=1",
+   "expected": "code=0 且命中项目",
+   "actual": "命中=3 条",
+   "status": "通过"
+  },
+  {
+   "id": "FT-05",
+   "module": "A 前台展示",
+   "title": "排序参数 views / newest 生效",
+   "steps": "GET /api/projects?sort=views|newest",
+   "expected": "浏览量降序、创建时间降序",
+   "actual": "两者均为降序=True",
+   "status": "通过"
+  },
+  {
+   "id": "FT-06",
+   "module": "A 前台展示",
+   "title": "page_size 超上限被截断",
+   "steps": "GET /api/projects?page_size=500",
+   "expected": "page_size 被限制为 ≤100",
+   "actual": "page_size=20",
+   "status": "通过"
+  },
+  {
+   "id": "FT-07",
+   "module": "A 前台展示",
+   "title": "项目详情返回基础信息与内容块",
+   "steps": "GET /api/projects/1",
+   "expected": "code=0 且 blocks 非空",
+   "actual": "项目=MyGoVoice blocks=5",
+   "status": "通过"
+  },
+  {
+   "id": "FT-08",
+   "module": "A 前台展示",
+   "title": "查询不存在的项目返回 40400",
+   "steps": "GET /api/projects/999999",
+   "expected": "code=40400",
+   "actual": "code=40400 http=200",
+   "status": "通过"
+  },
+  {
+   "id": "FT-09",
+   "module": "A 前台展示",
+   "title": "分类列表接口",
+   "steps": "GET /api/categories",
+   "expected": "返回分类数组",
+   "actual": "分类数=4",
+   "status": "通过"
+  },
+  {
+   "id": "FT-10",
+   "module": "A 前台展示",
+   "title": "标签列表接口",
+   "steps": "GET /api/tags",
+   "expected": "返回标签数组",
+   "actual": "标签数=30",
+   "status": "通过"
+  },
+  {
+   "id": "FT-11",
+   "module": "B 搜索",
+   "title": "关键词搜索命中项目",
+   "steps": "GET /api/projects?keyword=Go",
+   "expected": "返回命中项目",
+   "actual": "命中=3 条",
+   "status": "通过"
+  },
+  {
+   "id": "FT-12",
+   "module": "B 搜索",
+   "title": "搜索联想返回不超过 6 条",
+   "steps": "GET /api/search/suggest?keyword=Go",
+   "expected": "0 < 条数 ≤ 6",
+   "actual": "条数=3",
+   "status": "通过"
+  },
+  {
+   "id": "FT-13",
+   "module": "B 搜索",
+   "title": "空关键词联想不报错",
+   "steps": "GET /api/search/suggest?keyword=",
+   "expected": "code=0，返回空数组",
+   "actual": "code=0 data=[]",
+   "status": "通过"
+  },
+  {
+   "id": "FT-14",
+   "module": "B 搜索",
+   "title": "无结果关键词返回空列表",
+   "steps": "GET /api/projects?keyword=zzzz_not_exist_9x",
+   "expected": "total=0 且 list 为空",
+   "actual": "total=0",
+   "status": "通过"
+  },
+  {
+   "id": "FT-15",
+   "module": "B 搜索",
+   "title": "搜索输入 SQL 注入串不报错",
+   "steps": "keyword=' OR 1=1 --",
+   "expected": "服务正常返回，不出现 500",
+   "actual": "code=0",
+   "status": "通过"
+  },
+  {
+   "id": "FT-16",
+   "module": "C 认证与权限",
+   "title": "正确账号密码登录成功",
+   "steps": "POST /api/auth/login",
+   "expected": "code=0 且返回 token",
+   "actual": "code=0 token长度=180",
+   "status": "通过"
+  },
+  {
+   "id": "FT-17",
+   "module": "C 认证与权限",
+   "title": "错误密码登录被拒",
+   "steps": "POST /api/auth/login (错误密码)",
+   "expected": "code=40100",
+   "actual": "code=40100",
+   "status": "通过"
+  },
+  {
+   "id": "FT-18",
+   "module": "C 认证与权限",
+   "title": "不存在账号登录被拒",
+   "steps": "POST /api/auth/login (不存在账号)",
+   "expected": "code=40100",
+   "actual": "code=40100",
+   "status": "通过"
+  },
+  {
+   "id": "FT-19",
+   "module": "C 认证与权限",
+   "title": "无 token 访问后台接口被拒",
+   "steps": "GET /api/admin/overview (无 token)",
+   "expected": "code=40100",
+   "actual": "code=40100",
+   "status": "通过"
+  },
+  {
+   "id": "FT-20",
+   "module": "C 认证与权限",
+   "title": "非法 token 被拒",
+   "steps": "GET /api/admin/overview (伪造 token)",
+   "expected": "code=40100",
+   "actual": "code=40100",
+   "status": "通过"
+  },
+  {
+   "id": "FT-21",
+   "module": "C 认证与权限",
+   "title": "当前用户接口返回信息且不含密码",
+   "steps": "GET /api/auth/me",
+   "expected": "username=admin 且无 passwordHash",
+   "actual": "username=admin 含密码字段=False",
+   "status": "通过"
+  },
+  {
+   "id": "FT-22",
+   "module": "D 项目管理",
+   "title": "仪表盘统计返回项目总数",
+   "steps": "GET /api/admin/overview",
+   "expected": "含 projectTotal/published",
+   "actual": "projectTotal=15",
+   "status": "通过"
+  },
+  {
+   "id": "FT-23",
+   "module": "D 项目管理",
+   "title": "后台项目列表返回状态字段",
+   "steps": "GET /api/admin/projects",
+   "expected": "返回 5 条且每行含 status",
+   "actual": "条数=5",
+   "status": "通过"
+  },
+  {
+   "id": "FT-24",
+   "module": "D 项目管理",
+   "title": "新建项目（草稿）",
+   "steps": "POST /api/admin/projects",
+   "expected": "code=0 且返回新项目 id",
+   "actual": "code=0 id=27",
+   "status": "通过"
+  },
+  {
+   "id": "FT-25",
+   "module": "D 项目管理",
+   "title": "新建后可回显内容块与成员",
+   "steps": "GET /api/admin/projects/27",
+   "expected": "blocks=3 members=1 status=draft",
+   "actual": "blocks=3 members=1 status=draft",
+   "status": "通过"
+  },
+  {
+   "id": "FT-26",
+   "module": "D 项目管理",
+   "title": "草稿项目前台不可见",
+   "steps": "GET /api/projects/27 (前台)",
+   "expected": "code=40400",
+   "actual": "code=40400",
+   "status": "通过"
+  },
+  {
+   "id": "FT-27",
+   "module": "D 项目管理",
+   "title": "整单保存全量替换内容块",
+   "steps": "PUT /api/admin/projects/27",
+   "expected": "blocks 由 3 变 2 且内容已替换",
+   "actual": "blocks=2 首块=改写后的小节",
+   "status": "通过"
+  },
+  {
+   "id": "FT-28",
+   "module": "D 项目管理",
+   "title": "上架后前台可见",
+   "steps": "PUT 置 published 后 GET 前台详情",
+   "expected": "code=0 前台可见",
+   "actual": "code=0",
+   "status": "通过"
+  },
+  {
+   "id": "FT-29",
+   "module": "D 项目管理",
+   "title": "设置推荐位与排序",
+   "steps": "PUT /api/admin/projects/27/recommend",
+   "expected": "isRecommended=true recommendOrder=9",
+   "actual": "isRecommended=True order=9",
+   "status": "通过"
+  },
+  {
+   "id": "FT-30",
+   "module": "D 项目管理",
+   "title": "下架项目",
+   "steps": "PUT /api/admin/projects/27/status {archived}",
+   "expected": "status=archived",
+   "actual": "status=archived",
+   "status": "通过"
+  },
+  {
+   "id": "FT-31",
+   "module": "D 项目管理",
+   "title": "项目重名被拒",
+   "steps": "POST /api/admin/projects (同名)",
+   "expected": "code=40900",
+   "actual": "code=40900",
+   "status": "通过"
+  },
+  {
+   "id": "FT-32",
+   "module": "D 项目管理",
+   "title": "删除项目后查询返回 40400",
+   "steps": "DELETE 后 GET 详情",
+   "expected": "删除成功且后续 40400",
+   "actual": "delete=0 后续=40400",
+   "status": "通过"
+  },
+  {
+   "id": "FT-33",
+   "module": "D 项目管理",
+   "title": "后台查询不存在项目返回 40400",
+   "steps": "GET /api/admin/projects/999999",
+   "expected": "code=40400",
+   "actual": "code=40400",
+   "status": "通过"
+  },
+  {
+   "id": "FT-34",
+   "module": "E 内容块校验",
+   "title": "图片块缺 URL 被拒",
+   "steps": "POST 项目 blocks=[{type:image,url:''}]",
+   "expected": "code=40000",
+   "actual": "code=0（服务端未校验，项目被创建）",
+   "status": "未通过"
+  },
+  {
+   "id": "FT-35",
+   "module": "E 内容块校验",
+   "title": "标题块缺文本被拒",
+   "steps": "POST 项目 blocks=[{type:heading,text:''}]",
+   "expected": "code=40000",
+   "actual": "code=0（服务端未校验，项目被创建）",
+   "status": "未通过"
+  },
+  {
+   "id": "FT-36",
+   "module": "E 内容块校验",
+   "title": "非法内容块类型被拒",
+   "steps": "POST 项目 blocks=[{type:'video'}]",
+   "expected": "code=40000",
+   "actual": "code=50000",
+   "status": "未通过"
+  },
+  {
+   "id": "FT-37",
+   "module": "F 分类与标签",
+   "title": "新建分类（回查确认落库）",
+   "steps": "POST /api/admin/categories + GET 列表",
+   "expected": "code=0 且列表中可查到",
+   "actual": "code=0 id=11",
+   "status": "通过"
+  },
+  {
+   "id": "FT-38",
+   "module": "F 分类与标签",
+   "title": "分类重名被拒",
+   "steps": "POST /api/admin/categories (同名)",
+   "expected": "code=40900",
+   "actual": "code=40900",
+   "status": "通过"
+  },
+  {
+   "id": "FT-39",
+   "module": "F 分类与标签",
+   "title": "新建标签（回查确认落库）",
+   "steps": "POST /api/admin/tags + GET 列表",
+   "expected": "code=0 且列表中可查到",
+   "actual": "code=0 id=35",
+   "status": "通过"
+  },
+  {
+   "id": "FT-40",
+   "module": "F 分类与标签",
+   "title": "标签重名被拒",
+   "steps": "POST /api/admin/tags (同名)",
+   "expected": "code=40900",
+   "actual": "code=40900",
+   "status": "通过"
+  },
+  {
+   "id": "FT-41",
+   "module": "F 分类与标签",
+   "title": "被项目引用的分类不可删",
+   "steps": "DELETE /api/admin/categories/<有项目的分类>",
+   "expected": "code=40900 引用保护",
+   "actual": "code=40900",
+   "status": "通过"
+  },
+  {
+   "id": "FT-42",
+   "module": "F 分类与标签",
+   "title": "删除无引用的分类成功",
+   "steps": "DELETE 刚建的测试分类",
+   "expected": "code=0",
+   "actual": "code=0",
+   "status": "通过"
+  },
+  {
+   "id": "FT-43",
+   "module": "F 分类与标签",
+   "title": "删除测试标签成功",
+   "steps": "DELETE 刚建的测试标签",
+   "expected": "code=0",
+   "actual": "code=0",
+   "status": "通过"
+  },
+  {
+   "id": "FT-44",
+   "module": "G 图片上传",
+   "title": "上传合法图片并可通过 URL 访问",
+   "steps": "POST /api/admin/upload (jpg)",
+   "expected": "code=0 且返回 url 可访问",
+   "actual": "code=0 url=/uploads/202610/a23b6fd3f7312cfb2b7245105e2382a8.jpg",
+   "status": "通过"
+  },
+  {
+   "id": "FT-45",
+   "module": "G 图片上传",
+   "title": "上传非图片扩展名被拒",
+   "steps": "POST /api/admin/upload (.txt)",
+   "expected": "code=40000",
+   "actual": "code=40000",
+   "status": "通过"
+  },
+  {
+   "id": "FT-46",
+   "module": "G 图片上传",
+   "title": "上传超过 5MB 的图片被拒",
+   "steps": "POST /api/admin/upload (6MB)",
+   "expected": "code=40000",
+   "actual": "code=40000",
+   "status": "通过"
+  },
+  {
+   "id": "FT-47",
+   "module": "H 异常与边界",
+   "title": "非法 id 格式返回参数错误",
+   "steps": "GET /api/projects/abc",
+   "expected": "code=40000",
+   "actual": "code=40000",
+   "status": "通过"
+  },
+  {
+   "id": "FT-48",
+   "module": "H 异常与边界",
+   "title": "超长项目名被拒",
+   "steps": "POST 项目 name 长度 > 100",
+   "expected": "code=40000",
+   "actual": "code=40000",
+   "status": "通过"
+  },
+  {
+   "id": "FT-49",
+   "module": "H 异常与边界",
+   "title": "项目名为空被拒",
+   "steps": "POST 项目 name=''",
+   "expected": "code=40000",
+   "actual": "code=40000",
+   "status": "通过"
+  },
+  {
+   "id": "FT-50",
+   "module": "H 异常与边界",
+   "title": "引用不存在的分类被拒",
+   "steps": "POST 项目 categoryId=999999",
+   "expected": "code=40000",
+   "actual": "code=40000",
+   "status": "通过"
+  },
+  {
+   "id": "FT-51",
+   "module": "H 异常与边界",
+   "title": "软删除后同名资源可重建或明确报冲突",
+   "steps": "新建分类 → 删除 → 再建同名",
+   "expected": "code=0 或 40900（不应是 50000）",
+   "actual": "code=50000",
+   "status": "未通过"
+  }
+ ]
+}
